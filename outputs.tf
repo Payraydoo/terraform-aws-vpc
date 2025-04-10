@@ -52,3 +52,18 @@ output "nat_public_ip" {
   description = "Public IP address of the NAT Gateway"
   value       = aws_eip.nat.public_ip
 }
+
+output "bastion_public_ip" {
+  description = "Public IP address of the bastion host"
+  value       = var.create_bastion ? aws_instance.bastion[0].public_ip : null
+}
+
+output "bastion_security_group_id" {
+  description = "Security group ID of the bastion host"
+  value       = var.create_bastion ? aws_security_group.bastion[0].id : null
+}
+
+output "bastion_instance_id" {
+  description = "Instance ID of the bastion host"
+  value       = var.create_bastion ? aws_instance.bastion[0].id : null
+}

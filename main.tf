@@ -1,9 +1,9 @@
-/**
+\*
  * # AWS VPC Terraform Module
  *
  * This module creates a complete AWS VPC with public and private subnets,
  * NAT Gateway, Internet Gateway, bastion host, and all necessary route tables.
- */
+*\
 
 resource "aws_vpc" "main" {
   cidr_block           = var.vpc_cidr
@@ -122,4 +122,75 @@ resource "aws_route_table_association" "private" {
   count          = length(aws_subnet.private)
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
+}
+
+# Bastion Host Security Group
+resource "aws_security_group" "bastion" {
+  count       = var.create_bastion ? 1 : 0
+  name        = "${var.tag_org}-${var.environment}-bastion-sg"
+  description = "Security group for bastion host"
+  vpc_id      = aws_vpc.main.id
+
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = var.bastion_allowed_cidr_blocks
+    description = "Allow SSH access from specified CIDR blocks"
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+    description = "Allow all outbound traffic"
+  }
+
+  tags = {
+    Name         = "${var.tag_org}-${var.environment}-bastion-sg"
+    Environment  = var.environment
+    Organization = var.tag_org
+  }
+}
+
+# Bastion Host Instance
+resource "aws_instance" "bastion" {
+  count                  = var.create_bastion ? 1 : 0
+  ami                    = var.bastion_ami != "" ? var.bastion_ami : data.aws_ami.amazon_linux[0].id
+  instance_type          = var.bastion_instance_type
+  key_name               = var.bastion_key_name
+  subnet_id              = aws_subnet.public[0].id
+  vpc_security_group_ids = [aws_security_group.bastion[0].id]
+  
+  root_block_device {
+    volume_size = var.bastion_volume_size
+    volume_type = "gp3"
+    encrypted   = true
+  }
+
+  associate_public_ip_address = true
+
+  tags = {
+    Name         = "${var.tag_org}-${var.environment}-bastion"
+    Environment  = var.environment
+    Organization = var.tag_org
+  }
+}
+
+# Latest Amazon Linux AMI
+data "aws_ami" "amazon_linux" {
+  count       = var.create_bastion ? 1 : 0
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
 }
