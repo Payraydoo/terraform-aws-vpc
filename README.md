@@ -1,117 +1,94 @@
-# AWS VPC Terraform Module
+# Terraform AWS VPC Module
 
-A Terraform module to create a fully-featured AWS VPC with both public and private subnets across multiple availability zones. This module creates the following resources:
+This module creates a VPC with 3 public and 3 private subnets, along with the necessary route tables, internet gateway, and NAT gateways.
 
-- VPC with DNS support and DNS hostnames enabled
-- Public and private subnets across multiple availability zones
-- Internet Gateway for public subnets
-- NAT Gateway for private subnets
-- Bastion host for secure access to private resources
-- Appropriate route tables for each subnet type
-- Network ACLs and security groups
-- Proper tagging of all resources
+## Features
 
-## SSH Key Setup for Bastion Host
-
-Before deploying the module with a bastion host, you need to create an SSH key pair in AWS:
-
-```bash
-# Create a new key pair in AWS and save the private key as securekey.pem
-aws ec2 create-key-pair --key-name bastion-securekey --query 'KeyMaterial' --output text > securekey.pem
-
-# Set the appropriate permissions to secure the key file
-chmod 400 securekey.pem
-
-# Store this key file securely - you'll need it to SSH into the bastion host
-```
-
-Then reference this key in the module configuration:
-
-```hcl
-module "vpc" {
-  # Other configuration...
-  
-  create_bastion   = true
-  bastion_key_name = "bastion-securekey"  # Name of the key you created in AWS
-}
-```
-
-After the bastion host is deployed, you can connect to it using:
-
-```bash
-# Connect to the bastion host
-ssh -i /path/to/securekey.pem ec2-user@$(terraform output -module=vpc bastion_public_ip)
-
-# Or set up an SSH tunnel to access resources in private subnets
-ssh -i /path/to/securekey.pem -L local_port:private_resource_ip:remote_port ec2-user@$(terraform output -module=vpc bastion_public_ip)
-```
+- Creates a VPC with customizable CIDR block (default: 10.0.0.0/16)
+- Creates 3 public subnets across different availability zones
+- Creates 3 private subnets across different availability zones
+- Sets up Internet Gateway for public subnets
+- Sets up NAT Gateways for private subnets
+- Configures route tables and associations
+- Standardized tagging system
 
 ## Usage
 
 ```hcl
 module "vpc" {
-  source = "Payraydoo/vpc/aws"
+  source  = "your-org/aws-vpc/terraform"
+  version = "0.1.0"
 
-  vpc_cidr             = "10.0.0.0/16"
-  availability_zones   = ["us-east-1a", "us-east-1b", "us-east-1c"]
-  public_subnet_cidrs  = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
-  private_subnet_cidrs = ["10.0.11.0/24", "10.0.12.0/24", "10.0.13.0/24"]
-  environment          = "dev"
-  tag_org              = "myorg"
+  tag_org = "company"
+  env     = "dev"
   
-  # Optional: Enable and configure bastion host
-  create_bastion             = true
-  bastion_allowed_cidr_blocks = ["192.168.0.0/16"]  # Only allow connections from specific IPs
-  bastion_key_name           = "bastion-securekey"
+  vpc_cidr_block    = "10.0.0.0/16"
+  azs               = ["us-east-1a", "us-east-1b", "us-east-1c"]
+  public_subnets    = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]
+  private_subnets   = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
+  
+  tags = {
+    Project     = "my-project"
+    ManagedBy   = "terraform"
+  }
 }
 ```
+
+## Requirements
+
+| Name | Version |
+|------|---------|
+| terraform | >= 1.0.0 |
+| aws | >= 4.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| aws | >= 4.0 |
+| cloudflare | >= 3.0 |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| vpc_cidr | The CIDR block for the VPC | `string` | `"10.0.0.0/16"` | no |
-| public_subnet_cidrs | List of CIDR blocks for the public subnets | `list(string)` | `["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24"]` | no |
-| private_subnet_cidrs | List of CIDR blocks for the private subnets | `list(string)` | `["10.0.11.0/24", "10.0.12.0/24", "10.0.13.0/24"]` | no |
-| availability_zones | List of availability zones in which to create subnets | `list(string)` | `["us-east-1a", "us-east-1b", "us-east-1c"]` | no |
-| environment | Environment name (e.g., dev, staging, production) | `string` | `"dev"` | no |
-| tag_org | Organization name for resource tagging | `string` | `"org"` | no |
-| enable_nat_gateway | Whether to enable NAT Gateway for private subnets | `bool` | `true` | no |
-| single_nat_gateway | Whether to use a single NAT Gateway for all private subnets | `bool` | `true` | no |
-| enable_vpn_gateway | Whether to create a VPN Gateway | `bool` | `false` | no |
-| tags | Additional tags for resources | `map(string)` | `{}` | no |
-| create_bastion | Whether to create a bastion host | `bool` | `false` | no |
-| bastion_allowed_cidr_blocks | CIDR blocks allowed to connect to the bastion host | `list(string)` | `["0.0.0.0/0"]` | no |
-| bastion_instance_type | Instance type for the bastion host | `string` | `"t3.micro"` | no |
-| bastion_key_name | SSH key name for the bastion host | `string` | `""` | no |
-| bastion_ami | AMI ID for the bastion host (empty uses latest Amazon Linux 2) | `string` | `""` | no |
-| bastion_volume_size | Root volume size for bastion host in GB | `number` | `8` | no |
+|------|-------------|------|---------|:--------:|
+| tag_org | Organization tag | `string` | n/a | yes |
+| env | Environment (dev, staging, prod) | `string` | n/a | yes |
+| vpc_cidr_block | CIDR block for the VPC | `string` | `"10.0.0.0/16"` | no |
+| azs | Availability zones to use | `list(string)` | n/a | yes |
+| public_subnets | CIDR blocks for public subnets | `list(string)` | n/a | yes |
+| private_subnets | CIDR blocks for private subnets | `list(string)` | n/a | yes |
+| enable_nat_gateway | Whether to create NAT gateways | `bool` | `true` | no |
+| single_nat_gateway | Whether to use a single NAT gateway for all private subnets | `bool` | `false` | no |
+| tags | Additional tags to apply to all resources | `map(string)` | `{}` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| vpc_id | The ID of the VPC |
+| id | VPC ID |
 | vpc_cidr_block | The CIDR block of the VPC |
-| public_subnet_ids | List of IDs of public subnets |
-| private_subnet_ids | List of IDs of private subnets |
-| public_subnet_cidrs | List of CIDR blocks of public subnets |
-| private_subnet_cidrs | List of CIDR blocks of private subnets |
-| nat_gateway_id | ID of the NAT Gateway |
-| internet_gateway_id | ID of the Internet Gateway |
-| public_route_table_id | ID of the public route table |
-| private_route_table_id | ID of the private route table |
-| nat_public_ip | Public IP address of the NAT Gateway |
-| bastion_public_ip | Public IP address of the bastion host |
-| bastion_security_group_id | Security group ID of the bastion host |
-| bastion_instance_id | Instance ID of the bastion host |
+| public_subnet_ids | List of public subnet IDs |
+| private_subnet_ids | List of private subnet IDs |
+| vpc_default_sg_id | The default security group ID of the VPC |
+| nat_gateway_ids | List of NAT Gateway IDs |
+| igw_id | Internet Gateway ID |
 
-## Examples
+## Cloudflare Integration
 
-* [Basic VPC](./examples/basic/README.md)
-* [Multi-AZ VPC](./examples/multi-az/README.md)
-* [VPC with VPN Gateway](./examples/vpn-gateway/README.md)
+This module doesn't directly handle DNS records. To manage DNS records with Cloudflare, use the Cloudflare provider in your root module:
 
-## License
+```hcl
+provider "cloudflare" {
+  api_token = var.cloudflare_api_token
+}
 
-MIT
+resource "cloudflare_record" "example" {
+  zone_id = var.cloudflare_zone_id
+  name    = "example"
+  value   = module.alb.dns_name
+  type    = "CNAME"
+  ttl     = 1
+  proxied = true
+}
+```
