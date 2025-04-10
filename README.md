@@ -16,10 +16,10 @@ This module creates a VPC with 3 public and 3 private subnets, along with the ne
 
 ```hcl
 module "vpc" {
-  source  = "your-org/aws-vpc/terraform"
+  source  = "payraydoo/aws-vpc/terraform"
   version = "0.1.0"
 
-  tag_org = "company"
+  tag_org = "payraydoo"
   env     = "dev"
   
   vpc_cidr_block    = "10.0.0.0/16"
@@ -28,7 +28,7 @@ module "vpc" {
   private_subnets   = ["10.0.101.0/24", "10.0.102.0/24", "10.0.103.0/24"]
   
   tags = {
-    Project     = "my-project"
+    Project     = "payraydoo"
     ManagedBy   = "terraform"
   }
 }
