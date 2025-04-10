@@ -2,7 +2,7 @@
  * # AWS VPC Terraform Module
  *
  * This module creates a complete AWS VPC with public and private subnets,
- * NAT Gateway, Internet Gateway, and all necessary route tables.
+ * NAT Gateway, Internet Gateway, bastion host, and all necessary route tables.
  */
 
 resource "aws_vpc" "main" {
@@ -11,9 +11,9 @@ resource "aws_vpc" "main" {
   enable_dns_hostnames = true
 
   tags = {
-    Name         = "${var.tag_org_short_name}-${var.environment}-vpc"
+    Name         = "${var.tag_org}-${var.environment}-vpc"
     Environment  = var.environment
-    Organization = var.tag_org_short_name
+    Organization = var.tag_org
   }
 }
 
@@ -26,9 +26,9 @@ resource "aws_subnet" "public" {
   map_public_ip_on_launch = true
 
   tags = {
-    Name         = "${var.tag_org_short_name}-${var.environment}-public-subnet-${count.index + 1}"
+    Name         = "${var.tag_org}-${var.environment}-public-subnet-${count.index + 1}"
     Environment  = var.environment
-    Organization = var.tag_org_short_name
+    Organization = var.tag_org
   }
 }
 
@@ -39,9 +39,9 @@ resource "aws_subnet" "private" {
   availability_zone = var.availability_zones[count.index]
 
   tags = {
-    Name         = "${var.tag_org_short_name}-${var.environment}-private-subnet-${count.index + 1}"
+    Name         = "${var.tag_org}-${var.environment}-private-subnet-${count.index + 1}"
     Environment  = var.environment
-    Organization = var.tag_org_short_name
+    Organization = var.tag_org
   }
 }
 
@@ -50,9 +50,9 @@ resource "aws_internet_gateway" "main" {
   vpc_id = aws_vpc.main.id
 
   tags = {
-    Name         = "${var.tag_org_short_name}-${var.environment}-igw"
+    Name         = "${var.tag_org}-${var.environment}-igw"
     Environment  = var.environment
-    Organization = var.tag_org_short_name
+    Organization = var.tag_org
   }
 }
 
@@ -61,9 +61,9 @@ resource "aws_eip" "nat" {
   domain = "vpc"
 
   tags = {
-    Name         = "${var.tag_org_short_name}-${var.environment}-nat-eip"
+    Name         = "${var.tag_org}-${var.environment}-nat-eip"
     Environment  = var.environment
-    Organization = var.tag_org_short_name
+    Organization = var.tag_org
   }
 }
 
@@ -72,9 +72,9 @@ resource "aws_nat_gateway" "main" {
   subnet_id     = aws_subnet.public[0].id
 
   tags = {
-    Name         = "${var.tag_org_short_name}-${var.environment}-nat-gateway"
+    Name         = "${var.tag_org}-${var.environment}-nat-gateway"
     Environment  = var.environment
-    Organization = var.tag_org_short_name
+    Organization = var.tag_org
   }
 
   depends_on = [aws_internet_gateway.main]
@@ -90,9 +90,9 @@ resource "aws_route_table" "public" {
   }
 
   tags = {
-    Name         = "${var.tag_org_short_name}-${var.environment}-public-route-table"
+    Name         = "${var.tag_org}-${var.environment}-public-route-table"
     Environment  = var.environment
-    Organization = var.tag_org_short_name
+    Organization = var.tag_org
   }
 }
 
@@ -105,9 +105,9 @@ resource "aws_route_table" "private" {
   }
 
   tags = {
-    Name         = "${var.tag_org_short_name}-${var.environment}-private-route-table"
+    Name         = "${var.tag_org}-${var.environment}-private-route-table"
     Environment  = var.environment
-    Organization = var.tag_org_short_name
+    Organization = var.tag_org
   }
 }
 

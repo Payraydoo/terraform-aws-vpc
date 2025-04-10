@@ -28,8 +28,8 @@ variable "environment" {
   default     = "dev"
 }
 
-variable "tag_org_short_name" {
-  description = "Organization short name for resource tagging"
+variable "tag_org" {
+  description = "Organization name for resource tagging"
   type        = string
   default     = "org"
 }
@@ -56,4 +56,41 @@ variable "tags" {
   description = "Additional tags for resources"
   type        = map(string)
   default     = {}
+}
+
+# Bastion Host Variables
+variable "create_bastion" {
+  description = "Whether to create a bastion host"
+  type        = bool
+  default     = false
+}
+
+variable "bastion_allowed_cidr_blocks" {
+  description = "CIDR blocks allowed to connect to the bastion host"
+  type        = list(string)
+  default     = ["0.0.0.0/0"]  # Default allows all IPs - change this in production
+}
+
+variable "bastion_instance_type" {
+  description = "Instance type for the bastion host"
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "bastion_key_name" {
+  description = "SSH key name for the bastion host"
+  type        = string
+  default     = ""
+}
+
+variable "bastion_ami" {
+  description = "AMI ID for the bastion host (empty uses latest Amazon Linux 2)"
+  type        = string
+  default     = ""
+}
+
+variable "bastion_volume_size" {
+  description = "Root volume size for bastion host in GB"
+  type        = number
+  default     = 8
 }
