@@ -32,3 +32,13 @@ output "igw_id" {
   description = "Internet Gateway ID"
   value       = aws_internet_gateway.this.id
 }
+
+output "vpc_id" {
+  description = "The ID of the VPC"
+  value       = aws_vpc.this.id
+}
+
+output "nat_gateway_ip" {
+  description = "Public IP address of the NAT gateway"
+  value       = var.enable_nat_gateway ? aws_eip.nat[0].public_ip : null
+}
