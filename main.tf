@@ -9,8 +9,8 @@ resource "aws_vpc" "this" {
 
   tags = merge(
     {
-      Name        = "${var.tag_org}-${var.env}-vpc"
-      Environment = var.env
+      Name         = "${var.tag_org}-${var.env}-vpc"
+      Environment  = var.env
       Organization = var.tag_org
     },
     var.tags
@@ -23,8 +23,8 @@ resource "aws_internet_gateway" "this" {
 
   tags = merge(
     {
-      Name        = "${var.tag_org}-${var.env}-igw"
-      Environment = var.env
+      Name         = "${var.tag_org}-${var.env}-igw"
+      Environment  = var.env
       Organization = var.tag_org
     },
     var.tags
@@ -42,8 +42,8 @@ resource "aws_subnet" "public" {
 
   tags = merge(
     {
-      Name        = "${var.tag_org}-${var.env}-public-subnet-${count.index + 1}"
-      Environment = var.env
+      Name         = "${var.tag_org}-${var.env}-public-subnet-${count.index + 1}"
+      Environment  = var.env
       Organization = var.tag_org
     },
     var.tags
@@ -60,8 +60,8 @@ resource "aws_subnet" "private" {
 
   tags = merge(
     {
-      Name        = "${var.tag_org}-${var.env}-private-subnet-${count.index + 1}"
-      Environment = var.env
+      Name         = "${var.tag_org}-${var.env}-private-subnet-${count.index + 1}"
+      Environment  = var.env
       Organization = var.tag_org
     },
     var.tags
@@ -76,8 +76,8 @@ resource "aws_eip" "nat" {
 
   tags = merge(
     {
-      Name        = "${var.tag_org}-${var.env}-nat-eip-${count.index + 1}"
-      Environment = var.env
+      Name         = "${var.tag_org}-${var.env}-nat-eip-${count.index + 1}"
+      Environment  = var.env
       Organization = var.tag_org
     },
     var.tags
@@ -92,8 +92,8 @@ resource "aws_nat_gateway" "this" {
 
   tags = merge(
     {
-      Name        = "${var.tag_org}-${var.env}-nat-gw-${count.index + 1}"
-      Environment = var.env
+      Name         = "${var.tag_org}-${var.env}-nat-gw-${count.index + 1}"
+      Environment  = var.env
       Organization = var.tag_org
     },
     var.tags
@@ -108,8 +108,8 @@ resource "aws_route_table" "public" {
 
   tags = merge(
     {
-      Name        = "${var.tag_org}-${var.env}-public-rt"
-      Environment = var.env
+      Name         = "${var.tag_org}-${var.env}-public-rt"
+      Environment  = var.env
       Organization = var.tag_org
     },
     var.tags
@@ -140,8 +140,8 @@ resource "aws_route_table" "private" {
 
   tags = merge(
     {
-      Name        = "${var.tag_org}-${var.env}-private-rt-${count.index + 1}"
-      Environment = var.env
+      Name         = "${var.tag_org}-${var.env}-private-rt-${count.index + 1}"
+      Environment  = var.env
       Organization = var.tag_org
     },
     var.tags
@@ -161,7 +161,7 @@ resource "aws_route" "private_nat_gateway" {
 resource "aws_route_table_association" "private" {
   count = length(var.private_subnets)
 
-  subnet_id      = aws_subnet.private[count.index].id
+  subnet_id = aws_subnet.private[count.index].id
   # Now we can always reference a route table since they're created for each subnet
   route_table_id = aws_route_table.private[count.index].id
 }
@@ -181,8 +181,8 @@ resource "aws_security_group" "default" {
 
   tags = merge(
     {
-      Name        = "${var.tag_org}-${var.env}-default-sg"
-      Environment = var.env
+      Name         = "${var.tag_org}-${var.env}-default-sg"
+      Environment  = var.env
       Organization = var.tag_org
     },
     var.tags
