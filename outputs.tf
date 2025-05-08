@@ -51,3 +51,8 @@ output "default_security_group_id" {
   description = "The ID of the default security group"
   value       = aws_security_group.default.id
 }
+
+output "nat_gateway_ip" {
+  description = "The public IP address of the NAT Gateway"
+  value       = var.enable_nat_gateway ? (length(aws_eip.nat) > 0 ? aws_eip.nat[0].public_ip : null) : null
+}
