@@ -1,6 +1,5 @@
 ##############################################
 # main.tf
-##############################################
 
 # Create VPC
 resource "aws_vpc" "this" {
@@ -72,7 +71,7 @@ resource "aws_subnet" "private" {
 # Create NAT Gateway
 resource "aws_eip" "nat" {
   count = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.public_subnets)) : 0
-  
+
   domain = "vpc"
 
   tags = merge(
@@ -132,9 +131,10 @@ resource "aws_route_table_association" "public" {
   route_table_id = aws_route_table.public.id
 }
 
-# Create route tables for private subnets
+# Create route tables for private subnets - ALWAYS create these regardless of NAT gateway
 resource "aws_route_table" "private" {
-  count = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.private_subnets)) : 0
+  # Changed to always create private route tables, one per subnet
+  count = length(var.private_subnets)
 
   vpc_id = aws_vpc.this.id
 
@@ -148,9 +148,9 @@ resource "aws_route_table" "private" {
   )
 }
 
-# Create route to NAT Gateway for private route tables
+# Create route to NAT Gateway for private route tables - only if NAT gateway enabled
 resource "aws_route" "private_nat_gateway" {
-  count = var.enable_nat_gateway ? (var.single_nat_gateway ? 1 : length(var.private_subnets)) : 0
+  count = var.enable_nat_gateway ? (var.single_nat_gateway ? length(var.private_subnets) : length(var.private_subnets)) : 0
 
   route_table_id         = aws_route_table.private[count.index].id
   destination_cidr_block = "0.0.0.0/0"
@@ -162,7 +162,8 @@ resource "aws_route_table_association" "private" {
   count = length(var.private_subnets)
 
   subnet_id      = aws_subnet.private[count.index].id
-  route_table_id = aws_route_table.private[var.single_nat_gateway ? 0 : count.index].id
+  # Now we can always reference a route table since they're created for each subnet
+  route_table_id = aws_route_table.private[count.index].id
 }
 
 # Create VPC default security group
